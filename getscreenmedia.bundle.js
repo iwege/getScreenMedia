@@ -9,8 +9,8 @@ module.exports = function (constraints, cb) {
     var hasConstraints = arguments.length === 2;
     var callback = hasConstraints ? cb : constraints;
     var error;
-
-    if (typeof window === 'undefined' || window.location.protocol === 'http:') {
+    var isNW = window.process && window.process.__node_webkit;
+    if (typeof window === 'undefined' || (window.location.protocol === 'http:' && !isNW)) {
         error = new Error('NavigatorUserMediaError');
         error.name = 'HTTPS_REQUIRED';
         return callback(error);
@@ -21,9 +21,11 @@ module.exports = function (constraints, cb) {
         var maxver = 33;
         // "known" crash in chrome 34 and 35 on linux
         if (window.navigator.userAgent.match('Linux')) maxver = 35;
-        if (chromever >= 26 && chromever <= maxver) {
+        console.log(isNW);
+        if ((chromever >= 26 && chromever <= maxver) || isNW) {
             // chrome 26 - chrome 33 way to do it -- requires bad chrome://flags
             // note: this is basically in maintenance mode and will go away soon
+            // node-webkit 0.9.2 and 0.11.x have patched so we still can use it without extension.
             constraints = (hasConstraints && constraints) || { 
                 video: {
                     mandatory: {
@@ -35,6 +37,7 @@ module.exports = function (constraints, cb) {
                     }
                 }
             };
+            console.log('get this t');
             getUserMedia(constraints, callback);
         } else {
             // chrome 34+ way requiring an extension
@@ -142,6 +145,10 @@ module.exports = function (constraints, cb) {
         error = new Error('MediaStreamError');
         error.name = 'NotSupportedError';
         return cb(error);
+    }
+
+    if (localStorage && localStorage.useFirefoxFakeDevice === "true") {
+        constraints.fake = true;
     }
 
     func.call(window.navigator, constraints, function (stream) {

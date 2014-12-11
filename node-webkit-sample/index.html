@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Screen Capture</title>
+<script>
+    // if (window.require) {
+    //     window.nodeRequire = window.require;
+    //     window.require = undefined;
+    // }
+</script>
+
+<script src="../getscreenmedia.bundle.js"></script>
+</head>
+<body onload="init();" style="background-color:#ababab;">
+    <div>
+        <div>
+            <video id="camFeed" width="1280" height="720" autoplay></video>
+        </div>
+    </div>
+    <script>
+    function init() {
+        getScreenMedia(function(error,stream){
+            console.log(arguments);
+            document.getElementById('camFeed').src = webkitURL.createObjectURL(stream);
+        });
+    }
+    </script>
+</body>
+
+</html>

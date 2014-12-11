@@ -1,0 +1,5 @@
+{
+    "name":"screen-capture-test",
+    "main":"index.html",
+    "chromium-args" : "--enable-usermedia-screen-capturing"
+}
