@@ -3,28 +3,72 @@
 
 <head>
     <title>Screen Capture</title>
-<script>
-    // if (window.require) {
-    //     window.nodeRequire = window.require;
-    //     window.require = undefined;
-    // }
-</script>
 
 <script src="../getscreenmedia.bundle.js"></script>
+<script src="./recordRTC.js"></script>
 </head>
 <body onload="init();" style="background-color:#ababab;">
+
     <div>
         <div>
             <video id="camFeed" width="1280" height="720" autoplay></video>
         </div>
+        <div>
+            <video id="camFeed2" width="1280" height="720" autoplay></video>
+        </div>
     </div>
+
+     <input type="file" nwsaveas="test.webm" id="btnStopRecording"/>
     <script>
+    var recordRTC;
+    var fs = require('fs');
     function init() {
+        var gui = require('nw.gui');
+        var screens = gui.Screen.Init();
+        var width = 0;
+        var height = 0;
+        screens.screens.forEach(function(screen){
+            width += screen.bounds.width;
+            height = Math.max(height,screen.bounds.height);
+        });
+
         getScreenMedia(function(error,stream){
-            console.log(arguments);
+            recordRTC = RecordRTC(stream,{
+                type: 'video',
+                video:{
+                    width:1280,
+                    height: 1280*height/width,
+                },
+                canvas:{
+                    width:1280,
+                    height:1280*height/width,
+                },
+                frameRate: 200,
+                quality: 10
+            });
+            recordRTC.startRecording(); 
             document.getElementById('camFeed').src = webkitURL.createObjectURL(stream);
         });
     }
+    document.getElementById('btnStopRecording').onclick = function () {
+    recordRTC.stopRecording(function (audioVideoWebMURL) {
+       document.getElementById('camFeed2').src = audioVideoWebMURL;
+        
+    });
+    document.getElementById('btnStopRecording').onchange = function(){
+        var name = this.value;
+        var recordedBlob = recordRTC.getBlob();
+
+        recordRTC.getDataURL(function(dataURL) { 
+        var data = dataURL.split(',')[1];
+        var file = new Buffer(data,'base64');
+            fs.writeFile(name,file,function(){
+                console.log(arguments);
+            })
+        });
+    }
+};
+
     </script>
 </body>
 
